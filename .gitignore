@@ -1,0 +1,5 @@
+.env
+emp/*
+storage/*
+.idea/*
+env/*
