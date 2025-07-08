@@ -9,6 +9,7 @@ import os
 import traceback
 
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 from sqlalchemy import inspect
 
@@ -37,6 +38,9 @@ class Http(Flask):
 
         self.config['SQLALCHEMY_ECHO'] = True  # 开启SQL日志
 
+        # 3.配置CORS（关键位置！必须在其他初始化之前）
+        self._configure_cors()
+
         # 3.注册绑定异常错误处理
         self.register_error_handler(Exception, self._register_error_handler)
 
@@ -57,6 +61,27 @@ class Http(Flask):
         # 5.注册应用路由
         router.register_router(self)
 
+    def _configure_cors(self):
+        """配置跨域白名单"""
+        CORS(self, resources={
+            r"/*": {
+                "origins": ["http://localhost:5173"],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
+                "supports_credentials": True,
+                "max_age": 86400
+            }
+        })
+
+        # 确保所有响应都包含 CORS 头
+        @self.after_request
+        def add_cors_headers(response):
+            response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            return response
+        
     def _register_error_handler(self, error: Exception):
         if isinstance(error, CustomException):
             return json(Response(

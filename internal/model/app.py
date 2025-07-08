@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    Index
+    Index, text
 )
 from sqlalchemy.dialects.postgresql import UUID  # ✅ 使用PostgreSQL专用UUID类型
 
@@ -25,11 +25,13 @@ class App(db.Model):
         Index("idx_app_account_id", "account_id"),
     )
 
-    id = db.Column(UUID, primary_key=True, default=uuid.uuid4, nullable=False)
+    id = db.Column(UUID, nullable=False, primary_key=True, server_default=text("uuid_generate_v4()"))
     account_id = db.Column(UUID, nullable=False)  # 统一使用 db.Column
-    name = db.Column(db.String(255), default="", nullable=False)  # 使用 db.String
-    status = db.Column(db.String(255), default="", nullable=False)  # 使用 db.String
-    icon = db.Column(db.String(255), default="", nullable=False)
-    description = db.Column(db.Text, default="", nullable=False)  # 使用 db.Text
-    update_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
-    create_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    name = db.Column(db.String(255), nullable=False, server_default=text("''::character varying"))  # 使用 db.String
+    icon = db.Column(db.String(255), nullable=False, server_default=text("''::character varying"))
+    description = db.Column(db.Text, nullable=False, server_default=text("''::text"))  # 使用 db.Text
+    status = db.Column(db.String(255), nullable=False, server_default=text("''::character varying"))  # 使用 db.String
+    update_at = db.Column(db.DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP(0)"),
+                          server_onupdate=text("CURRENT_TIMESTAMP(0)"))
+
+    create_at = db.Column(db.DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP(0)"))
